@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Burger Builder Game</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      text-align: center;
+      margin: 0;
+      padding: 0;
+      background: url("assemble.png") no-repeat center center fixed;
+      background-size: cover;
+      color: #333;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    h1 {
+      margin: 20px 0 10px;
+    }
+
+    .ingredients {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 15px;
+      padding: 20px;
+      background-color: rgba(255, 255, 255, 0);
+      width: 100%;
+      box-sizing: border-box;
+    }
+
+    .ingredient {
+      width: 92px;
+      cursor: grab;
+      user-select: none;
+      transition: transform 0.2s;
+    }
+
+    .ingredient:hover {
+      transform: scale(1.1);
+    }
+
+    .ingredient.dragging {
+      opacity: 0.5;
+    }
+
+    .drop-zone {
+      margin: 40px auto 20px;
+      background-color: rgba(255, 255, 255, 0);
+      border-radius: 10px;
+      width: 300px;
+      min-height: 400px;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .drop-zone.dragover {
+      background-color: rgba(200, 255, 200, 0.3);
+    }
+
+    #check-button {
+      margin-top: 10px;
+      padding: 10px 20px;
+      font-size: 16px;
+      cursor: pointer;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      transition: background-color 0.2s;
+    }
+
+    #check-button:hover {
+      background-color: #45a049;
+    }
+
+    .result {
+      font-size: 20px;
+      margin: 15px;
+      font-weight: bold;
+    }
+
+    img.fullscreen {
+      width: 100vw;
+      height: 100vh;
+      object-fit: cover;
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <h1>Burger Builder Game</h1>
+
+  <div class="ingredients" id="ingredients">
+    <!-- Ingredients will be populated by JS -->
+  </div>
+
+  <div class="drop-zone" id="drop-zone">
+    <p>Drop ingredients here</p>
+  </div>
+
+  <button id="check-button">Finish</button>
+  <div class="result" id="result"></div>
+
+  <script>
+    const correctOrder = ["top-bun", "cheese", "patty", "lettuce", "bottom-bun"];
+    const ingredientNames = [...correctOrder];
+    const dropZone = document.getElementById("drop-zone");
+    const ingredientsContainer = document.getElementById("ingredients");
+    const result = document.getElementById("result");
+    const checkButton = document.getElementById("check-button");
+
+    let draggedItem = null;
+
+    function shuffle(array) {
+      for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+      }
+      return array;
+    }
+
+    function createIngredientElement(name) {
+      const img = document.createElement("img");
+      img.src = `${name}.png`;
+      img.classList.add("ingredient");
+      img.setAttribute("draggable", "true");
+      img.setAttribute("data-name", name);
+      img.alt = name;
+
+      img.addEventListener("dragstart", () => {
+        draggedItem = img;
+        img.classList.add("dragging");
+      });
+
+      img.addEventListener("dragend", () => {
+        img.classList.remove("dragging");
+      });
+
+      return img;
+    }
+
+    function populateIngredients(order = shuffle([...ingredientNames])) {
+      ingredientsContainer.innerHTML = "";
+      order.forEach(name => {
+        const element = createIngredientElement(name);
+        ingredientsContainer.appendChild(element);
+      });
+    }
+
+    dropZone.addEventListener("dragover", e => {
+      e.preventDefault();
+      dropZone.classList.add("dragover");
+    });
+
+    dropZone.addEventListener("dragleave", () => {
+      dropZone.classList.remove("dragover");
+    });
+
+    dropZone.addEventListener("drop", e => {
+      e.preventDefault();
+      dropZone.classList.remove("dragover");
+      if (draggedItem && !dropZone.contains(draggedItem)) {
+        dropZone.appendChild(draggedItem);
+        draggedItem = null;
+      }
+    });
+
+    checkButton.addEventListener("click", () => {
+      result.textContent = "";
+      const added = [...dropZone.querySelectorAll(".ingredient")].map(el => el.dataset.name);
+      if (JSON.stringify(added) === JSON.stringify(correctOrder)) {
+        // Replace the entire body with the completed image
+        document.body.innerHTML = '<img src="Sanji, i am hungry, please make me a nandos burger!.png" alt="Burger Complete" class="fullscreen">';
+      } else {
+        result.textContent = "The order ain't right, try again.";
+        result.style.color = "red";
+        const wrongIngredients = dropZone.querySelectorAll(".ingredient");
+        wrongIngredients.forEach(el => {
+          ingredientsContainer.appendChild(el);
+        });
+      }
+    });
+
+    populateIngredients();
+  </script>
+</body>
+</html>
